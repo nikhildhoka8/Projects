@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang = "en-us">
+    <head>
+        <meta charset = "UTF-8">
+        <title>
+            NBA Standings
+        </title>
+        <link rel="stylesheet" href="/static/standings.css">
+        <style>
+h1 {
+color: #e00257;
+font-family: arial, sans-serif;
+font-size: 50px;
+font-weight: bold;
+margin-top: 0px;
+margin-bottom: 1px;
+}
+        </style>
+    </head>
+    <body>
+<div style="text-align: center;">
+<%
+from bottle import request
+direction = request.forms.get("direction")
+if direction == "east":
+    conference = "Eastern"
+else:
+    conference = "Western"
+end
+%>
+<h1>
+    NBA {{conference}} Conference Standings
+</h1>
+</div>
+<br>
+<div class="container">
+	<table>
+		<thead>
+			<tr>
+				<th>Team Name</th>
+				<th>Wins</th>
+				<th>Losses</th>
+				<th>Home</th>
+				<th>Away</th>
+				<th>Streak</th>
+			</tr>
+		</thead>
+		<tbody>
+<%
+from bottle import request
+from requests import get
+import requests
+from pprint import PrettyPrinter
+url = "https://api-nba-v1.p.rapidapi.com/standings"
+direction = request.forms.get("direction")
+
+querystring = {"league":"standard","season":"2022","conference":"" + direction}
+
+headers = {
+"X-RapidAPI-Key": "283837fd8amsh2691d03445b5a64p170850jsn0f5472cf69f3",
+"X-RapidAPI-Host": "api-nba-v1.p.rapidapi.com"
+}
+
+main = requests.request("GET", url, headers=headers, params=querystring).json()
+printer = PrettyPrinter()
+standings = main['response']
+#printer.pprint(standings)
+print("Rankings for the Eastern Conference")
+print("Team Name        Wins   Losses")
+standings.sort(key=lambda x: x['conference']['rank'])
+    for game in standings:
+        team_name = game['team']['name']
+        wins = game['division']['win']
+        losses = game['division']['loss']
+        home_wins = game['win']['home']
+        home_losses = game['loss']['home']
+        away_losses = game['loss']['away']
+        away_wins = game['win']['away']
+        streak_counter = game['streak']
+        if game['winStreak'] == True:
+            streak = "W"
+        elif game['winStreak'] == False:
+            streak = "L"
+        end
+%>
+		<tr>
+            <td>{{team_name}}</td>
+            <td>{{wins}}</td>
+            <td>{{losses}} </td>
+            <td>{{home_wins}}-{{home_losses}}</td>
+            <td>{{away_wins}}-{{away_losses}}</td>
+            <td>{{streak}}{{streak_counter}}</td>
+            %end
+        </tr>
+		</tbody>
+	</table>
+</div>
+    </body>
+</html>
