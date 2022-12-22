@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>NBA Games by Custom Date</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/static/game.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
+<style>
+body,h4 {font-family: "Raleway", sans-serif}
+</style>
+</head>
+<body class = "body_grey">
+  <div class = "card">
+    <div class = "container">
+      <h4 class = "header">Games as per Custom Date</h4>
+    </div>
+    <ul class="ul hover-white">
+<%
+from bottle import request
+import requests
+from pprint import PrettyPrinter
+from requests import get
+printer = PrettyPrinter()
+
+date = request.forms.get("date_1")
+if ((date[5] + date[6]) == "04" or  (date[5] + date[6]) == "06") or ((date[5] + date[6]) == "11" or (date[5] + date[6]) == "09") and ((date[8] + date[9]) == "30"):
+    date_corrector = date[5] + date[6]
+    date_corrector = int(date_corrector) + 1
+    date_corrector = f"{date_corrector}-01"
+    date = ''.join ([date[i] for i in [0, 1, 2, 3, 4]])
+    date = f"{date}{date_corrector}"
+elif (((date[5]) + date[6] == "01") or ((date[5]) + date[6] == "03") or ((date[5]) + date[6] == "05") or ((date[5]) + date[6] == "07") or ((date[5]) + date[6] =="08") or ((date[5]) + date[6] == "10")) and ((date[8] + date[9]) == "31"):
+    date_corrector = date[5] + date[6]
+    date_corrector = int(date_corrector) + 1
+    date_corrector = f"{date_corrector}-01"
+    date = ''.join ([date[i] for i in [0, 1, 2, 3, 4]])
+    date = f"{date}{date_corrector}"
+elif (date[5] + date[6] == "02") and (date[8] + date[9] == "28"):
+    date_corrector = "03-01"
+    date = ''.join ([date[i] for i in [0, 1, 2, 3, 4]])
+    date = f"{date}{date_corrector}"
+elif (date[5] + date[6] == "12") and (date[8] + date[9] == "31"):
+    date_corrector = date[0] + date[1] + date[2] + date[3]
+    print(date_corrector)
+    date_corrector = int(date_corrector) + 1
+    date = f"{date_corrector}-01-01"
+elif ((int(date[2]+ date[3])) % 4 ) == 0 and ((date[8] + date[9]) == "28"):
+    date_corrector = date[0] + date[1] + date[2] + date[3]
+    date = f"{date_corrector}-02-29"
+
+else:
+    date_corrector = date[8] + date[9]
+    date_corrector = str(int(date_corrector) + 1)
+    if len(date_corrector) == 1:
+        date_corrector = f"0{date_corrector}"
+    else:
+        pass
+    end
+    date = ''.join ([date[i] for i in [0, 1, 2, 3, 4, 5, 6, 7 ]])
+    date = f"{date}{date_corrector}"
+end
+
+url = "https://api-nba-v1.p.rapidapi.com/games"
+
+querystring = {"date":"" + date}
+
+headers = {
+	"X-RapidAPI-Key": "283837fd8amsh2691d03445b5a64p170850jsn0f5472cf69f3",
+	"X-RapidAPI-Host": "api-nba-v1.p.rapidapi.com"
+}
+
+response = requests.request("GET", url, headers=headers, params=querystring).json()
+printer.pprint(response)
+date_game = response['response']
+for game in date_game:
+	h_team = game['teams']['home']['name']
+	h_team_score = game['scores']['home']['points']
+	v_team = game['teams']['visitors']['name']
+	v_team_score = game['scores']['visitors']['points']
+	clock = game['status']['clock']
+	quarter = game['periods']['current']
+	image_h_team = game['teams']['home']['logo']
+	image_v_team = game['teams']['visitors']['logo']
+%>
+      <li class = "padder">
+        <img src= "{{image_h_team}}" alt="Image" style="width:50px">
+        <span class = "large">{{h_team}}</span><br>
+        <span class = "label"> VS </span><br>
+        <img src= "{{image_v_team}}" alt="Image"  style="width:50px">
+        <span class = "large">{{v_team}}</span><br>
+        <label class = "right">
+            {{h_team_score}} - {{v_team_score}}
+        </label><br>
+        <label class = "right1">
+            clock: {{clock}}
+        </label><br>
+        <label class = "right1">
+            quarter: {{quarter}}
+        </label>
+      </li>
+     %end
+    </ul>
+  </div>
+  <hr>
+
+
+</body>
+</html>
